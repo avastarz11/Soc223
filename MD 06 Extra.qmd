@@ -1,0 +1,233 @@
+---
+title: "MD 06 Extra"
+author: "Ava Foster"
+format: html
+embed-resources: true
+editor: visual
+---
+
+# Homework 6.2
+
+For this assignment you are going to use the `bikes` dataset we began analyzing in class. You can get that dataset from the **bayesrules** package. Once **bayesrules** is installed, you can begin.
+
+```{r}
+library(tidyverse)
+library(moderndive)
+theme_set(theme_minimal())
+```
+
+Load the data and take a look.
+
+```{r}
+data(bikes, package = "bayesrules")
+glimpse(bikes)
+```
+
+## Question 0
+
+Before analyzing a dataset, it's good to know some stuff about it. Answer the following questions:
+
+-   how many rows are in the dataset?
+
+    -   500
+
+-   what does each row represent?
+
+    -   Date
+
+-   what dates does the dataset cover?
+
+    -   2011-01-01 through 2012-12-31
+
+-   what is the highest observed ridership in the dataset?
+
+    -   6946
+
+-   what was the highest wind speed recorded in the dataset?
+
+    -   34.00002
+
+## Question 1
+
+What is the correlation between number of rides and what the temperature feels like (in Fahrenheit)? What is the correlation between the number of rides and wind speed (miles per hour)?
+
+```{r}
+bikes %>%
+  get_correlation(formula = rides ~ temp_feel)
+```
+
+```{r}
+bikes %>%
+  get_correlation(formula = rides ~ windspeed)
+```
+
+##The correlation between the number of rides and what the temperature feels like is 0.58. The correlation between the number of rides and wind speed is -0.19.
+
+## Question 2
+
+Using the approximation that a mile is equal to 1.61 kilometers, convert `windspeed` to kilometers per hour. Call the new variable `wind_kph` and add it to the `bikes` data frame. What is the correlation between wind speed in MPH and wind speed in KPH? Explain why in enough detail that I know you understand.
+
+```{r}
+bikes <- bikes %>%
+  mutate(wind_kph = (windspeed*1.61))
+```
+
+```{r}
+bikes %>%
+  get_correlation(formula = windspeed ~ wind_kph)
+```
+
+##The correlation between wind speed in MPH and wind speed in KPH is 1. The correlation is 1 because they are the same variable, but in different units. A correlation coefficient is a quantitative expression of the strength of the linear relationship between two numerical variables. A correlation coefficient of 1 indicates a perfect positive relationship: As the value of one variable goes up, the value of the other variable tends to go up as well in a linear fashion.
+
+## Question 3
+
+Estimate two simple regressions:
+
+-   predict rides as a function of wind speed in MPH
+
+    -   rides = 4400 + (-72 x y)
+
+-   predict rides as a function of wind speed in KPH
+
+    -   rides = 4400 + (-45 x y)
+
+Use `get_regression_table()` or `broom::tidy()` to display the results. This will give you two sets of an intercept and a slope. If any coefficients are the same between models, explain why. If any coefficients are different between models, explain why. Make sure to give me enough detail to convince me you understand.
+
+```{r}
+mph <- lm(rides ~ windspeed, bikes)
+
+kph <- lm(rides ~ wind_kph, bikes)
+
+get_regression_table(mph)
+
+get_regression_table(kph)
+```
+
+##Both models have the same intercept. The intercept is the value of y when x = 0. This is because the number of rides when mph is 0 is the same when kph is 0. The models have differing slopes. The mph model's slope is -55.52. The kph model's slope is -34.49. For every increase of 1 unit in windspeed and wind_kph, there is an associated decrease of, on average, 55.52 units and 34.49 units of rides respectively. While the slopes are different numbers, a mile is equal to 1.61 kilometers. -34.49 x 1.61 = -55.52.
+
+## Question 4
+
+Using the models from above, tell me what the predicted ridership would be if the wind is blowing at 20 KPH. What would the predicted ridership be if the wind is blowing at 20 MPH?
+
+```{r}
+4205.065 + (-34.486*20)
+```
+
+##The predicted ridership if the wind was blowing at 20 KPH would be 3515.345
+
+```{r}
+4205.065 + (-55.523*20)
+```
+
+##The predicted ridership if the wind was blowing at 20 MPH would be 3094.605
+
+## Question 5
+
+Let's get more realistic and move to multiple regression. We're going to use `temp_feel` in addition to wind speed. But we don't want to use Fahrenheit. So make a new variable called `temp_c` that is a conversion of `temp_feel` to Celsius and add it to the `bikes` dataframe. (You may have to look up how to do this conversion.)
+
+```{r}
+bikes <- bikes %>%
+  mutate(temp_c = ((temp_feel - 32) / 1.8))
+```
+
+With this new variable, estimate a multiple regression that predicts rides as an additive function of `wind_kph` and `temp_c` (that is, no interaction). Interpret both of the slope coefficients using the following language:
+
+"For a \_\_\_\_\_ increase in \_\_\_\_\_, the model expects a \_\_\_\_\_ increase in \_\_\_\_\_."
+
+Now interpret the intercept.\
+
+```{r}
+temp_and_wind <- lm(rides ~ wind_kph + temp_c, bikes)
+
+get_regression_table(temp_and_wind)
+```
+
+##For a 1 unit increase in wind speed, the model expects a -19.842 increase in rides. For a 1 unit increase in temp_c the model expects a 143.234 increase in rides.
+
+## Question 6
+
+Using the multiple regression you just estimated, give me ridership predictions for the following situations:
+
+-   SITUATION 1: temp = 25C, wind = 15 KPH
+
+```{r}
+942.426 + (-19.842*15) + (143.234*25)
+```
+
+-   SITUATION 2: temp = 15C, wind = 5 KPH
+
+```{r}
+942.426 + (-19.842*5) + (143.234*15)
+```
+
+-   SITUATION 3: temp = 10C, wind = 40 KPH
+
+```{r}
+942.426 + (-19.842*40) + (143.234*10)
+```
+
+You can do this manually (using R as a calculator) or you might find the following code useful. I'm not going to give you *all* the code, but this is a head start!
+
+```{r}
+pred_df <- tibble(
+  situation = 1:3,
+  temp_c = c(25, 15, 10),
+  wind_kph = c(15, 5, 40)
+)
+```
+
+## Question 7
+
+Let's add another predictor into the mix. Estimate a new model that uses `weekend` in addition to the predictors already in the model. Display the model results. Interpret the coefficient on `weekend` using a complete sentence.
+
+```{r}
+plus_weekend <- lm(rides ~ (wind_kph + temp_c) * weekend, bikes)
+
+get_regression_table(plus_weekend)
+```
+
+##The value for weekendTRUE of -842.294 is the offset in slope for weekendFALSE relative to weekendTRUE. The intercept for weekendFALSE is the intercept (1250.41) + weekendTRUE (-842.294) which equals 408.116.
+
+## Question 8
+
+If the temperature and the wind speed are average, what is the expected ridership for a weekend day? What is the expected ridership for a weekday? Show the code that gets you your answers.
+
+```{r}
+bikes %>%
+  summarise(wind_mean = mean(wind_kph), temp_mean = mean(temp_c))
+```
+
+```{r}
+# Weekend Day Ridership
+
+# intercept: 1250.41 - 842.294 = 408.116
+# wind_kph slope: -22.504 + 7.587 = -14.914
+# temp_c slope: 140.761 - 1.470 = 139.291
+
+408.116 + (-14.914 * 20.96) + (139.291 * 20.64)
+```
+
+##If the temperature and wind speed are average, the expected ridership for a weekend day would be 2970.422
+
+```{r}
+# Week Day Ridership
+
+1250.41 + ((-22.504 * 20.96) + (140.761 * 20.64))
+```
+
+##If the temperature and wind speed are average, the expected ridership for a week day would be 3684.033
+
+## Question 9
+
+You can use `get_regression_points()` or `predict()` to see how the model did at predicting each individual value of `rides`. Use one of these functions to find the date with the *largest absolute residual*. That is, find the day where the model is most wrong about predicted ridership. Why is the model so wrong about this day? (There is a correct answer here.)
+
+```{r}
+regression_points <- get_regression_points(plus_weekend)
+regression_points
+```
+
+##The largest absolute residual is 3270.118 on 2012-08-17. The model is so wrong about this day because it was a week day with low temperatures and relatively high wind which would predict low ridership. In fact out of the 500 days recorded it was the 44th most cold day (12.120) and the 143rd most windy day (24.956). However, despite this, it was the day with the 48th most rides (5665). According to our model, this day should have had 2394.823 rides.
+
+```{r}
+1250.41 + ((-22.504 * 24.956) + (140.761 * 12.120))
+```
