@@ -3276,22 +3276,23 @@ $ rides       &lt;int&gt; 654, 1229, 1454, 1518, 1362, 891, 1280, 1220, 1137, 13
 <h2 class="anchored" data-anchor-id="question-7">Question 7</h2>
 <p>Let’s add another predictor into the mix. Estimate a new model that uses <code>weekend</code> in addition to the predictors already in the model. Display the model results. Interpret the coefficient on <code>weekend</code> using a complete sentence.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>plus_weekend <span class="ot">&lt;-</span> <span class="fu">lm</span>(rides <span class="sc">~</span> (wind_kph <span class="sc">+</span> temp_c) <span class="sc">*</span> weekend, bikes)</span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="fu">get_regression_table</span>(plus_weekend)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>bikes <span class="ot">&lt;-</span> </span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  bikes <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">weekend =</span> <span class="fu">as.factor</span>(weekend))</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>add_weekend <span class="ot">&lt;-</span> <span class="fu">lm</span>(rides <span class="sc">~</span> wind_kph <span class="sc">+</span> temp_c <span class="sc">+</span> weekend, <span class="at">data =</span> bikes)</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a><span class="fu">get_regression_table</span>(add_weekend)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 6 × 7
-  term                 estimate std_error statistic p_value lower_ci upper_ci
-  &lt;chr&gt;                   &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
-1 intercept             1250.      293.       4.26    0        674.   1827.  
-2 wind_kph               -22.5       7.38    -3.05    0.002    -37.0    -8.01
-3 temp_c                 141.       10.5     13.4     0        120.    161.  
-4 weekendTRUE           -842.      552.      -1.52    0.128  -1928.    243.  
-5 wind_kph:weekendTRUE     7.59     14.0      0.543   0.588    -19.9    35.1 
-6 temp_c:weekendTRUE      -1.47     20.2     -0.073   0.942    -41.1    38.2 </code></pre>
+<pre><code># A tibble: 4 × 7
+  term          estimate std_error statistic p_value lower_ci upper_ci
+  &lt;chr&gt;            &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+1 intercept       1215.     252.        4.82   0        719.   1710.  
+2 wind_kph         -20.4      6.26     -3.26   0.001    -32.7    -8.09
+3 temp_c           140.       8.96     15.7    0        123.    158.  
+4 weekend: TRUE   -714.     122.       -5.83   0       -954.   -473.  </code></pre>
 </div>
 </div>
-<p>##The value for weekendTRUE of -842.294 is the offset in slope for weekendFALSE relative to weekendTRUE. The intercept for weekendFALSE is the intercept (1250.41) + weekendTRUE (-842.294) which equals 408.116.</p>
+<p>##The value for weekend: TRUE of -713.575 is the offset in slope for weekend: FALSE relative to weekend: TRUE. The intercept for weekend: TRUE is the intercept (1214.803) + weekend: TRUE (-713.575) which equals 501.228.</p>
 </section>
 <section id="question-8" class="level2">
 <h2 class="anchored" data-anchor-id="question-8">Question 8</h2>
@@ -3305,56 +3306,52 @@ $ rides       &lt;int&gt; 654, 1229, 1454, 1518, 1362, 891, 1280, 1220, 1137, 13
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Weekend Day Ridership</span></span>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Weekend: FALSE Ridership</span></span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="co"># intercept: 1250.41 - 842.294 = 408.116</span></span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="co"># wind_kph slope: -22.504 + 7.587 = -14.914</span></span>
-<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="co"># temp_c slope: 140.761 - 1.470 = 139.291</span></span>
-<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a><span class="fl">408.116</span> <span class="sc">+</span> (<span class="sc">-</span><span class="fl">14.914</span> <span class="sc">*</span> <span class="fl">20.96</span>) <span class="sc">+</span> (<span class="fl">139.291</span> <span class="sc">*</span> <span class="fl">20.64</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="fl">1214.803</span> <span class="sc">+</span> (<span class="sc">-</span><span class="fl">20.386</span> <span class="sc">*</span> <span class="fl">20.961</span>) <span class="sc">+</span> (<span class="fl">140.339</span> <span class="sc">*</span> <span class="fl">20.635</span>) <span class="sc">+</span> (<span class="sc">-</span><span class="fl">713.575</span> <span class="sc">*</span> <span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 2970.485</code></pre>
+<pre><code>[1] 3683.387</code></pre>
 </div>
 </div>
-<p>##If the temperature and wind speed are average, the expected ridership for a weekend day would be 2970.422</p>
+<p>##If the temperature and wind speed are average, the expected ridership for a week day would be 3683.387</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Week Day Ridership</span></span>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Weekend: TRUE Ridership</span></span>
 <span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="fl">1250.41</span> <span class="sc">+</span> ((<span class="sc">-</span><span class="fl">22.504</span> <span class="sc">*</span> <span class="fl">20.96</span>) <span class="sc">+</span> (<span class="fl">140.761</span> <span class="sc">*</span> <span class="fl">20.64</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="fl">1214.803</span> <span class="sc">+</span> (<span class="sc">-</span><span class="fl">20.386</span> <span class="sc">*</span> <span class="fl">20.961</span>) <span class="sc">+</span> (<span class="fl">140.339</span> <span class="sc">*</span> <span class="fl">20.635</span>) <span class="sc">+</span> (<span class="sc">-</span><span class="fl">713.575</span> <span class="sc">*</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 3684.033</code></pre>
+<pre><code>[1] 2969.812</code></pre>
 </div>
 </div>
-<p>##If the temperature and wind speed are average, the expected ridership for a week day would be 3684.033</p>
+<p>##If the temperature and wind speed are average, the expected ridership for a weekend day would be 2969.812</p>
 </section>
 <section id="question-9" class="level2">
 <h2 class="anchored" data-anchor-id="question-9">Question 9</h2>
 <p>You can use <code>get_regression_points()</code> or <code>predict()</code> to see how the model did at predicting each individual value of <code>rides</code>. Use one of these functions to find the date with the <em>largest absolute residual</em>. That is, find the day where the model is most wrong about predicted ridership. Why is the model so wrong about this day? (There is a correct answer here.)</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>regression_points <span class="ot">&lt;-</span> <span class="fu">get_regression_points</span>(plus_weekend)</span>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>regression_points <span class="ot">&lt;-</span> <span class="fu">get_regression_points</span>(add_weekend)</span>
 <span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>regression_points</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 500 × 7
       ID rides wind_kph temp_c weekend rides_hat residual
-   &lt;int&gt; &lt;int&gt;    &lt;dbl&gt;  &lt;dbl&gt; &lt;lgl&gt;       &lt;dbl&gt;    &lt;dbl&gt;
- 1     1   654     17.3  18.2  TRUE        2682.   -2028.
- 2     2  1229     26.8   9.47 FALSE       1981.    -752.
- 3     3  1454     17.3  10.6  FALSE       2354.    -900.
- 4     4  1518     20.2  11.5  FALSE       2410.    -892.
- 5     5  1362     18.2  10.4  FALSE       2311.    -949.
- 6     6   891     28.8   8.11 TRUE        1109.    -218.
- 7     7  1280     24.1   7.54 FALSE       1770.    -490.
- 8     8  1220     13.2   9.57 FALSE       2302.   -1082.
- 9     9  1137     32.9   8.02 FALSE       1640.    -503.
-10    10  1368     32.5   7.54 FALSE       1582.    -214.
+   &lt;int&gt; &lt;int&gt;    &lt;dbl&gt;  &lt;dbl&gt; &lt;fct&gt;       &lt;dbl&gt;    &lt;dbl&gt;
+ 1     1   654     17.3  18.2  TRUE        2700.   -2046.
+ 2     2  1229     26.8   9.47 FALSE       1998.    -769.
+ 3     3  1454     17.3  10.6  FALSE       2351.    -897.
+ 4     4  1518     20.2  11.5  FALSE       2413.    -895.
+ 5     5  1362     18.2  10.4  FALSE       2309.    -947.
+ 6     6   891     28.8   8.11 TRUE        1053.    -162.
+ 7     7  1280     24.1   7.54 FALSE       1783.    -503.
+ 8     8  1220     13.2   9.57 FALSE       2290.   -1070.
+ 9     9  1137     32.9   8.02 FALSE       1671.    -534.
+10    10  1368     32.5   7.54 FALSE       1612.    -244.
 # ℹ 490 more rows</code></pre>
 </div>
 </div>
-<p>##The largest absolute residual is 3270.118 on 2012-08-17. The model is so wrong about this day because it was a week day with low temperatures and relatively high wind which would predict low ridership. In fact out of the 500 days recorded it was the 44th most cold day (12.120) and the 143rd most windy day (24.956). However, despite this, it was the day with the 48th most rides (5665). According to our model, this day should have had 2394.823 rides.</p>
+<p>##The largest absolute residual is -3490.348 on 2012-10-29. The model is so wrong about this day because it was a week day where the temperatures felt nice (21.970), although there were high winds. Even so, this day had only 20 rides and our model estimates that this day would have 3510.356 rides.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fl">1250.41</span> <span class="sc">+</span> ((<span class="sc">-</span><span class="fl">22.504</span> <span class="sc">*</span> <span class="fl">24.956</span>) <span class="sc">+</span> (<span class="fl">140.761</span> <span class="sc">*</span> <span class="fl">12.120</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fl">1214.803</span> <span class="sc">+</span> (<span class="sc">-</span><span class="fl">20.386</span> <span class="sc">*</span> <span class="fl">38.639</span>) <span class="sc">+</span> (<span class="fl">140.339</span> <span class="sc">*</span> <span class="fl">21.970</span>) <span class="sc">+</span> (<span class="sc">-</span><span class="fl">713.575</span> <span class="sc">*</span> <span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 2394.823</code></pre>
+<pre><code>[1] 3510.356</code></pre>
 </div>
 </div>
 </section>

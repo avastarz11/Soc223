@@ -181,12 +181,15 @@ pred_df <- tibble(
 Let's add another predictor into the mix. Estimate a new model that uses `weekend` in addition to the predictors already in the model. Display the model results. Interpret the coefficient on `weekend` using a complete sentence.
 
 ```{r}
-plus_weekend <- lm(rides ~ (wind_kph + temp_c) * weekend, bikes)
+bikes <- 
+  bikes |> mutate(weekend = as.factor(weekend))
 
-get_regression_table(plus_weekend)
+add_weekend <- lm(rides ~ wind_kph + temp_c + weekend, data = bikes)
+
+get_regression_table(add_weekend)
 ```
 
-##The value for weekendTRUE of -842.294 is the offset in slope for weekendFALSE relative to weekendTRUE. The intercept for weekendFALSE is the intercept (1250.41) + weekendTRUE (-842.294) which equals 408.116.
+##The value for weekend: TRUE of -713.575 is the offset in slope for weekend: FALSE relative to weekend: TRUE. The intercept for weekend: TRUE is the intercept (1214.803) + weekend: TRUE (-713.575) which equals 501.228.
 
 ## Question 8
 
@@ -198,36 +201,32 @@ bikes %>%
 ```
 
 ```{r}
-# Weekend Day Ridership
+# Weekend: FALSE Ridership
 
-# intercept: 1250.41 - 842.294 = 408.116
-# wind_kph slope: -22.504 + 7.587 = -14.914
-# temp_c slope: 140.761 - 1.470 = 139.291
-
-408.116 + (-14.914 * 20.96) + (139.291 * 20.64)
+1214.803 + (-20.386 * 20.961) + (140.339 * 20.635) + (-713.575 * 0)
 ```
 
-##If the temperature and wind speed are average, the expected ridership for a weekend day would be 2970.422
+##If the temperature and wind speed are average, the expected ridership for a week day would be 3683.387
 
 ```{r}
-# Week Day Ridership
+# Weekend: TRUE Ridership
 
-1250.41 + ((-22.504 * 20.96) + (140.761 * 20.64))
+1214.803 + (-20.386 * 20.961) + (140.339 * 20.635) + (-713.575 * 1)
 ```
 
-##If the temperature and wind speed are average, the expected ridership for a week day would be 3684.033
+##If the temperature and wind speed are average, the expected ridership for a weekend day would be 2969.812
 
 ## Question 9
 
 You can use `get_regression_points()` or `predict()` to see how the model did at predicting each individual value of `rides`. Use one of these functions to find the date with the *largest absolute residual*. That is, find the day where the model is most wrong about predicted ridership. Why is the model so wrong about this day? (There is a correct answer here.)
 
 ```{r}
-regression_points <- get_regression_points(plus_weekend)
+regression_points <- get_regression_points(add_weekend)
 regression_points
 ```
 
-##The largest absolute residual is 3270.118 on 2012-08-17. The model is so wrong about this day because it was a week day with low temperatures and relatively high wind which would predict low ridership. In fact out of the 500 days recorded it was the 44th most cold day (12.120) and the 143rd most windy day (24.956). However, despite this, it was the day with the 48th most rides (5665). According to our model, this day should have had 2394.823 rides.
+##The largest absolute residual is -3490.348 on 2012-10-29. The model is so wrong about this day because it was a week day where the temperatures felt nice (21.970), although there were high winds. Even so, this day had only 20 rides and our model estimates that this day would have 3510.356 rides.
 
 ```{r}
-1250.41 + ((-22.504 * 24.956) + (140.761 * 12.120))
+1214.803 + (-20.386 * 38.639) + (140.339 * 21.970) + (-713.575 * 0)
 ```
