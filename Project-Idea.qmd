@@ -1,0 +1,25 @@
+---
+title: "Project-Idea"
+author: "Ava Foster"
+format: html
+embed-resources: true
+editor: visual
+---
+
+I am thinking about doing my final project on something about consumer data. I am broadly interested in what factors influence consumers' subjective ratings and reviews of products. One dataset I am thinking about is a dataset I found on Kaggle about Sephora consumers' reviews and ratings of different products.
+
+Sophie wants to do something about university rankings and starting salary.
+
+Ava (not me) wants to do something with Spotify.
+
+```{r}
+library(dplyr)
+library(moderndive)
+library(tidyverse)
+```
+
+```{r}
+sephora <- read_csv("https://raw.githubusercontent.com/avastarz11/Soc223/main/sephora_website_dataset.csv")
+
+sephora
+```
