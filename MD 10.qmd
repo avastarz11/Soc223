@@ -1,0 +1,153 @@
+---
+title: "MD 10"
+author: "Ava Foster"
+format: html
+embed-resources: true
+editor: visual
+---
+
+# Chapter 10
+
+For the last set of complementary exercises, we will go to one of the topics that have made data analysis and statistics famous: baseball. Now, I am far from an expert in baseball, but the wealth of data that the game provides makes it a space of almost endless possibilities for folks who are interested in that sort of thing.
+
+Chapter 10 brings some of the ideas about hypothesis testing into the realm of regression. We will review these ideas. Here, we will be looking at pitchers' data. Specifically, we are going to be looking at variables that might predict pitchers' performance. Our variable for pitchers' performance will be ERA - Earned Run Average. This basically means: how many runs did you allow your opponents to score (per nine innings). The implication is that a lower ERA means a better pitching performance.
+
+Let's read in and glimpse the data.
+
+```{r}
+library(tidyverse)
+library(moderndive)
+library(broom)
+library(infer)
+```
+
+```{r}
+pitchers <- read.csv("https://raw.githubusercontent.com/vaiseys/dav-course/main/Data/Pitching.csv")
+glimpse(pitchers)
+```
+
+We have a wealth of data. If you are interested, I got this data from the amazing Lahman Database, which is truly an astounding resource. In our dataset each row represents the career stats of a player. Here, we are going to be interested in just three variables: `ERA`, `BAopp`, `WP`. The first we already covered. The last two represent the opponents' batting average and wild pitches respectively. Wild pitches are throws that were not caught by the catcher (at the pitcher's fault) *and* that caused someone to advance a base.
+
+One thing you might notice is that we have a fair amount of `NA`s in our variables of interest. Let's get rid of those before we start our analysis.
+
+```{r}
+pitchers_cln <- pitchers %>% 
+  select(ERA, BAOpp, WP) %>% 
+  drop_na()
+```
+
+## Question 1
+
+What does it mean to start thinking of the fitted intercept and slope of a regression as point estimates? Why does this introduce uncertainty?
+
+-   When you think of the fitted intercept and slope of a regression as point estimates, you are viewing the data as a representative sample of a greater study population. This introduces uncertainty because, viewing it as a representative sample means that you are viewing the fitted as an estimate of some true and unknown *population line.* In short, the estimates will be subject to sampling variability.
+
+## Question 2
+
+What is the number that quantifies that uncertainty?
+
+> Hint: it is the standard deviation of a point estimate.
+
+-   standard error
+
+## Question 3
+
+Okay, let's dive right in. Run a linear regression with `ERA` as an outcome variable as `BAopp` as the explanatory variable. Save it as `model1`.
+
+```{r}
+model1 <- lm(ERA ~ BAOpp, data = pitchers_cln)
+
+get_regression_table(model1)
+  
+```
+
+Using `tidy()` describe your results. Does the coefficient make sense? Is the relationship what you expected?
+
+```{r}
+tidy(model1, conf.int = TRUE)
+```
+
+-   yes the coefficient makes sense. Yes the relationship is what I expected. As ERA increases, BAOpp also increases.
+
+## Question 4
+
+Examine the standard error. Describe it in a few sentences. Are you confident in the result?
+
+-   the standard error is 0.0424. The standarderror quantifies how much variation in the fitted slope one would expect between different samples. We can expect about 0.0424 units of variation in the BAOpp slope variable.
+
+## Question 5
+
+Examine the p-value. What does it imply about the confidence we can have in our results?
+
+-   A p-value is the probability of obtaining a test statistic just as extreme or more extreme than the observed test statistic assuming the null hypothesis is true. The p-value is 3.561703e-49 which is basically 0. Therefore, for any choice of significance level we would reject the null hypothesis in favor of the alternative hypothesis.
+
+## Question 6
+
+Let's do an exercise that will test your skills a bit. Write a script that samples 30 pitchers and run the same analysis. Save these results as `model2`.
+
+```{r}
+set.seed(1234567)
+
+model22 <- pitchers_cln %>%
+  rep_sample_n(size = 30)
+```
+
+```{r}
+model2 <- lm(ERA ~ BAOpp, data = model22)
+
+tidy(model2, conf.int = TRUE)
+```
+
+Now, do the same with 100 and 1000 pitchers. Name these models, `model3` and `model4` respectively.
+
+```{r}
+set.seed(32)
+
+model33 <- pitchers_cln %>%
+  rep_sample_n(size = 100)
+```
+
+```{r}
+model3 <- lm(ERA ~ BAOpp, data = model33)
+
+tidy(model3, conf.int = TRUE)
+```
+
+```{r}
+set.seed(47)
+
+model44 <- pitchers_cln %>%
+  rep_sample_n(size = 1000)
+```
+
+```{r}
+model4 <- lm(ERA ~ BAOpp, data = model44)
+
+tidy(model4, conf.int = TRUE)
+```
+
+Examine the p-values of each of the models. What can you notice?
+
+-   The p-value for model 2 is 0.19988491. The p-value for model 3 is 2.836322e-04. The p-value for model 4 is 5.472846e-06. I notice that, for my models, as the sample size increases, the p-value decreases.
+
+This should also be a cautionary tale. Huge samples offer the "benefit" of almost guaranteed infinitesimally small p-values. In the age of Big Data, this means that any person can take a huge dataset, make a silly argument, and call it statistically significant.
+
+## Question 7
+
+Another cautionary tale to end the course.
+
+Run a linear regression with `ERA` as an outcome variable as `WP` as the explanatory variable. Examine the results using `tidy()`.
+
+```{r}
+set.seed(14)
+
+model5 <- lm(ERA ~ WP, data = pitchers_cln)
+
+tidy(model5)
+```
+
+Presumably, these results are fairly counterintuitive. Wild pitches are related to better performance.
+
+Why can that be? It might mean that more reckless pitchers are actually better. Perhaps, they are more unpredictable. A far more plausible interpretation however is that pitchers who take more risks are both more likely to get wild pitches and more likely to succeed.
+
+Now, we don't know what the correct explanation is. This is the lesson here. We have a really strong relationship with an infinitesimally small p-value. In the world of mindless data analysis, we have struck gold. However, even in this beautiful scenario, we have multiple stories that are consistent with our results. P-values are never a sign that something is *causing* something else or that a variable is a key part of an explanatory mechanism. They are simply a way of describing the uncertainty around a point estimate, **conditional** on the model you have fitted. Next time someone tells you a big story around a coefficient just because it is *statistically significant*, we hope you have a question or two.
