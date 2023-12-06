@@ -1,0 +1,529 @@
+---
+title: "Final Project"
+author: "Ava Foster"
+format: html
+embed-resources: true
+echo: false
+editor: visual
+---
+
+# Predictive Factors of Age on Purchasing
+
+```{r}
+#| echo: false
+#| message: false
+
+library(dplyr)
+library(moderndive)
+library(tidyverse)
+library(fivethirtyeight)
+library(infer)
+library(base)
+```
+
+```{r}
+#| echo: false
+#| message: false
+
+shopping_behavior <- read_csv("https://raw.githubusercontent.com/avastarz11/Soc223/main/shopping_behavior_updated.csv")
+```
+
+```{r}
+#| echo: false
+#| message: false
+
+
+shopping_behavior$age_group <- as.factor(ifelse(shopping_behavior$age < 24, "18-24", 
+                                         ifelse(shopping_behavior$age < 29, "25-29", 
+                                         ifelse(shopping_behavior$age < 34, "30-34", 
+                                         ifelse(shopping_behavior$age < 39, "35-39", 
+                                         ifelse(shopping_behavior$age < 44, "40-44",
+                                         ifelse(shopping_behavior$age < 49, "45-49",
+                                         ifelse(shopping_behavior$age < 54, "50-54",
+                                         ifelse(shopping_behavior$age < 59, "55-59",
+                                         ifelse(shopping_behavior$age < 64, "60-64",
+                                         ifelse(shopping_behavior$age < 75, "65-70")))))))))))
+```
+
+```{r}
+#| echo: false
+#| message: false
+
+shopping_behavior$generation <- as.factor(ifelse(shopping_behavior$age < 29, "Generation Z",
+                                          ifelse(shopping_behavior$age < 44, "Millenials",
+                                          ifelse(shopping_behavior$age < 59, "Generation X",
+                                          ifelse(shopping_behavior$age < 78, "Baby Boomers")))))
+```
+
+```{r}
+#| echo: false
+#| message: false
+
+
+shopping_behavior$numeric_age_group <- as.numeric(ifelse(shopping_behavior$age < 24, "1", 
+                                                  ifelse(shopping_behavior$age < 29, "1", 
+                                                  ifelse(shopping_behavior$age < 34, "1", 
+                                                  ifelse(shopping_behavior$age < 39, "1", 
+                                                  ifelse(shopping_behavior$age < 44, "1",
+                                                  ifelse(shopping_behavior$age < 49, "1",
+                                                  ifelse(shopping_behavior$age < 54, "1",
+                                                  ifelse(shopping_behavior$age < 59, "1",
+                                                  ifelse(shopping_behavior$age < 64, "1",
+                                                  ifelse(shopping_behavior$age < 75, "1")))))))))))
+```
+
+```{r}
+#| echo: false
+#| message: false
+
+
+shopping_behavior$numeric_generation <- as.numeric(ifelse(shopping_behavior$age < 29, "1",
+                                                  ifelse(shopping_behavior$age < 44, "1",
+                                                  ifelse(shopping_behavior$age < 59, "1",
+                                                  ifelse(shopping_behavior$age < 78, "1")))))
+```
+
+## 1. Introduction
+
+There has been much talk lately of the differing behaviors of the different generations, especially as Gen-Z is about to enter the adult stage of life. Online there has been a lot of dialogue. For example, the catchphrase \"ok, boomer\" gained significant attention, comparing millennials and Gen-Zs is a common trend, and Generation Alpha has entered their school-age years which has led to online discourse about their lack of social skills due to technology. The different general behaviors of the generations has many implications for marketers. This study aims to better understand how age influences purchase behavior. The Baby Boomer generation is made up of those born between 1945 and 1963 which includes people from age 60 to age 78. The next generation, Generation X, is made up of people born between 1964 and 1978 which includes people from age 45 to age 59. Generation X is followed by Millenials who were born between 1979 and 1993 which includes people between the age of 30 and 44. The last generation relevant to this study is Generation Z, born between 1994 and 2011 who are now between the ages of 12 and 29. 
+
+To better understand how age influences shopping behavior, I used a data set from Kaggle that compiled information on consumers that, \"includes demographic information, purchase history, product preferences, and preferred shopping channels (online or offline) (Kaggle).\" The data was last updated October, 2023. Each row of data represents a different individual consumer. 
+
+Here is a snapshot of 5 randomly chosen rows of the data set we\'ll use:
+
+```{r}
+#| echo: false
+#| message: false
+
+
+table1 <- shopping_behavior %>%
+  sample_n(size = 5)
+
+table1
+```
+
+## 2. Exploratory Data Analysis
+
+We had an original sample size of 3,900. None of the participants in the sample had missing objects so our total sample size remained 3,900.
+
+#### Table 1. Summary Statistics by generation of number of participants, mean and standard deviation for previous_purchases.
+
+```{r}
+#| echo: false
+#| message: false
+
+
+shopping_behavior_by_generation1 <- shopping_behavior %>%
+  group_by(generation) %>%
+  summarize(count = sum(numeric_generation),
+            mean_previous_purchases = mean(previous_purchases),
+            sd_previous_purchases = sd(previous_purchases))
+
+shopping_behavior_by_generation1
+```
+
+#### Table 2. Summary Statistics by generation of mean and standard deviation of review rating and mean and standard deviation amount purchased in USD.
+
+```{r}
+ shopping_behavior_by_generation2 <- shopping_behavior %>%
+  group_by(generation) %>%
+  summarize(mean_review = mean(review_rating),
+            sd_review = sd(review_rating),
+            mean_purchase_amount = mean(purchase_amount_USD),
+            sd_purchase_amount = sd(purchase_amount_USD))
+ 
+ shopping_behavior_by_generation2
+```
+
+#### Table 3. Summary Statistics by age group of number of participants by age group and mean and standard deviation of previous purchases.
+
+```{r}
+#| echo: false
+#| message: false
+
+
+shopping_behavior_by_age_group1 <- shopping_behavior %>%
+  group_by(age_group) %>%
+  summarize(count = sum(numeric_age_group),
+            mean_previous_purchases = mean(previous_purchases),
+            sd_previous_purchases = sd(previous_purchases))
+shopping_behavior_by_age_group1
+```
+
+#### Table 4. Summary Statistics by age group of mean and standard deviation of review rating and mean and standard deviation of amount purchased in USD.
+
+```{r}
+ shopping_behavior_by_age_group2 <- shopping_behavior %>%
+  group_by(age_group) %>%
+  summarize(mean_review = mean(review_rating),
+            sd_review = sd(review_rating),
+            mean_purchase_amount = mean(purchase_amount_USD),
+            sd_purchase_amount = sd(purchase_amount_USD)) 
+
+ shopping_behavior_by_age_group2
+```
+
+The generation with the greatest mean amount of previous purchases were the Baby Boomers (n = 863, mean = 25.93, median = 26, sd = 14.26), however when split by age group, the group with the greatest mean amount of previous purchases were those aged 55 to 59 (n = 398, mean = 26.28, median = 27, sd = 14.58), members of Generation X. However, the group with the second greatest mean amount of previous purchases were those aged 65 to 70 (n = 500, mean = 26.42, median = 27, sd = 14.29) who are indeed apart of the Baby Boomer generation.
+
+```{r}
+#| echo: false
+#| message: false
+
+
+ggplot(shopping_behavior_by_generation1, aes(x = mean_previous_purchases, y = reorder(generation, mean_previous_purchases), color = generation)) + 
+  geom_point(size = 3) + 
+  labs(x = "Mean Number of Previous Purchases", y = "Generation", title = "Figure 1. Mean Number of Previous Purchases by Generation", color = "Generation")
+```
+
+```{r}
+#| echo: false
+#| message: false
+
+
+ggplot(shopping_behavior_by_age_group1, aes(x = mean_previous_purchases, y = reorder(age_group, mean_previous_purchases), color = age_group)) + 
+  geom_point(size = 3) + 
+  labs(x = "Mean Number of Previous Purchases", y = "Age Group", title = "Figure 2. Mean Number of Previous Purchases by Age Group", color = "Age Group")
+```
+
+The generation who spent the greatest average amount of money in USD on their purchase was Generation Z (n = 802, mean = 60.36, median = 61, sd = 23.88). However, the age group who spent the greatest average amount were aged 50 to 54 (n = 382, mean = 63.06, median = 64, sd = 23.90), Generation Xers, followed by the Generation Z age group between the ages of 25 and 29 (n = 384, mean = 61.04, median = 61.5, sd = 24.07).
+
+```{r}
+#| echo: false
+#| message: false
+
+
+ggplot(shopping_behavior_by_generation2, aes(x = mean_purchase_amount, y = reorder(generation, mean_purchase_amount), color = generation)) + 
+  geom_point(size = 3) + 
+  labs(x = "Mean Amount Purchased", y = "Generation", title = "Figure 3. Mean Amount Purchased by Generation", color = "Generation")
+```
+
+```{r}
+#| echo: false
+#| message: false
+
+
+ggplot(shopping_behavior_by_age_group2, aes(x = mean_purchase_amount, y = reorder(age_group, mean_purchase_amount), color = age_group)) + 
+  geom_point(size = 3) + 
+  labs(x = "Mean Amount Purchased", y = "Age Group", title = "Figure 4. Mean Amount Purchased by Age Group", color = "Age Group") 
+```
+
+Finally, the generation with highest average review rating were the Generation Z (n = 802, mean = 3.79, median = 3.8, sd = 0.71) and Millenials (n = 1117, mean = 3.75, median = 3.8, sd = 0.72). The age group with the highest average review rating were ages 18 to 24 (n = 418, mean = 3.81, median = 3.9, sd = 0.73), Generation Zers. They were followed by those aged 25 to 29 (n = 384, mean = 3.77, median = 3.8, sd = 0.73), the other Generation Z age group.
+
+```{r}
+#| echo: false
+#| message: false
+
+
+ggplot(shopping_behavior_by_generation2, aes(x = mean_review, y = reorder(generation, mean_review), color = generation)) + 
+  geom_point(size = 3) + 
+  labs(x = "Mean Review Rating", y = "Generation", title = "Figure 5. Mean Review Rating by Generation", color = "Generation") 
+```
+
+```{r}
+#| echo: false
+#| message: false
+
+
+ggplot(shopping_behavior_by_age_group2, aes(x = mean_review, y = reorder(age_group, mean_review), color = age_group)) + 
+  geom_point(size = 3) + 
+  labs(x = "Mean Review Rating", y = "Age Group", title = "Figure 6. Mean Review Rating by Age Group", color = "Age Group")
+```
+
+Exploratory analysis leads us to ask if there are any other variables across age that influence purchase behaviors.
+
+## 3. Multiple Linear Regression
+
+### 3.1.1. Model 1 Methods
+
+The components of my multiple linear regression model are the following:
+
+-   outcome variable y1 = purchase amount in USD
+
+-   Numerical explanatory variable x1 = age
+
+-   Categorical explanatory variable x2 = frequency of purchases
+
+We want to know if the relationship between age and purchase_amount_USD is conditional on one's frequency of purchase.
+
+#### Table 5. Regression table for interaction model of amount purchased in USD as a function of  age and frequency of purchases. 
+
+```{r}
+#| echo: false
+#| message: false
+
+
+purchase_amount_regression <- lm(purchase_amount_USD ~ age * forequency_of_purchases, data = shopping_behavior)
+
+broom::tidy(purchase_amount_regression, conf.int = TRUE)
+```
+
+###  3.1.2. Model 1 Results
+
+-   Since "annually" comes first alphabetically, people who shop annually are the "baseline comparison group". Therefore, the intercept (b0 = 65.75) represents the intercept for only the annual group.
+
+```{=html}
+<!-- -->
+```
+-   The estimate for the slope for age (bage = -0.12) is the associated change in purchase amount for every increase of one year in age. Every increase of one year, there is a 0.12 decrease in amount purchased.
+
+-   The estimate for the following purchasing frequencies are the offsets in intercept relative to the annual group (baseline).
+
+### 3.1.3. Model 1 Interpretation
+
+Using the output of our regression table we\'ll test two different null hypotheses. The first null hypothesis is that there is no relationship between age and amount purchased in USD at the population level (the population slope is zero).
+
+There appears to be a possible negative relationship between age and amount purchased in USD for consumers Bage = -0.12. However, this does not appear to be a meaningful relationship since in the table, we see
+
+-   the 95% confidence interval for the population slope Bage (-0.250, 0.00068), zero is included within this interval
+
+-   Although, the p-value (p = 0.051) is less than 0.1, there is still weak evidence against the null hypothesis
+
+The null hypothesis cannot be confidently rejected
+
+The second set of null hypotheses that we are test are that all the differences in intercept for the non-baseline groups are zero.
+
+-   the 95% confidence intervals for the population difference in intercept Bquarterly (0.032, 0.28) and Bbiweekly (-17.29, -0.45) are the only ones that do not include 0. So it is plausible that the difference of all intercepts, except Bquarterly and Bbiweekly, are zero, hence it is plausible that all intercepts are the same.
+
+-   The majority of the p-values are too large to reject the null hypothesis. However, the p-value for Bquarterly is 0.021 and Bbiweekly is 0.039.
+
+```{r, fig.height= 12, fig.width= 10}
+#| echo: false
+#| message: false
+
+
+a <- ggplot(shopping_behavior, aes(x = age, y = purchase_amount_USD, color = forequency_of_purchases)) +
+  geom_jitter(alpha = .2) +
+  labs(x = "age", y = "purchase amount", color = "Frequency of Purchases", title = "Figure 7. Effects of Age and Frequency of Purchases on Amount Purchased in USD") +
+  geom_smooth(method = "lm", se = FALSE)
+
+a + scale_x_continuous(breaks = c(18, 24, 29, 34, 39, 44, 49, 54, 59, 64, 69, 74))
+```
+
+### 3.2.1. Model 2 Methods
+
+The components of my multiple linear regression model are the following:
+
+-   outcome variable y1 = purchase amount in USD
+
+-   Numerical explanatory variable x1 = previous purchases
+
+-   Categorical explanatory variable x2 = age group
+
+We want to know if the relationship between amount of previous purchases and purchase_amount_USD is conditional on one's age group.
+
+#### Table 6.  Regression table for interaction model of amount purchased in USD as a function of  age group and previous purchases.
+
+```{r}
+#| echo: false
+#| message: false
+
+
+purchase_amount_regression <- lm(purchase_amount_USD ~ previous_purchases * age_group, data = shopping_behavior)
+
+broom::tidy(purchase_amount_regression, conf.int = TRUE)
+```
+
+### 3.2.2. Model 2 Results
+
+-   First, since 18-24 comes numerically before the other age groups, the 18-24 age group is the \"baseline for comparison\" group. Thus, intercept is the intercept *for the 18-24 group*.
+
+-   This holds similarly for previous_purchases. It is the slope for previous_purchases *for only the 18-24 group*. Thus, the regression line will have an intercept of 60.34 and slope for previous_purchases of -0.025. 
+
+-   The values for the following age groups are not their intercepts, but rather the *offset* in intercept for that specific age group relative to the 18-24 age group. The intercept for the other age groups are the intercept + the estimate for said age group.
+
+-   Similarly, the age groups x the previous_purchases are not the slopes for the other age groups, but rather the *offset* in slope for those age groups. Therefore, the slopes for age groups are age group estimate + age group x previous_purchases estimate. 
+
+### 3.2.3. Model 2 Interpretation
+
+The first null hypothesis is that there is no relationship between previous purchases and amount purchased in USD at the population level (the population slope is zero).
+
+There appears to be a possible negative relationship between previous purchases and amount purchased in USD for consumers Bpreviouspurchases = -0.025. However, this does not appear to be a meaningful relationship since in the table, we see
+
+-   the 95% confidence interval for the population slope B*previouspurchases* (-0.19, 0.0.14), zero is included within this interval
+
+-   The p-value (p = 0.76) is much greater than 0.1, there is no evidence against the null hypothesis
+
+The null hypothesis cannot be rejected.
+
+The second set of null hypotheses that we are test are that all the differences in intercept for the non-baseline groups are zero.
+
+-   All of the 95% confidence intervals contain zero, therefore it is plausible that all intercepts are the same.
+
+-   All of the p-values are too large to reject the null hypothesis.
+
+```{r, fig.height = 12, fig.width = 15}
+#| echo: false
+#| message: false
+
+
+ggplot(shopping_behavior, aes(x = previous_purchases, y = purchase_amount_USD, color = age_group)) +
+  geom_jitter(alpha = .2) +
+  labs(x = "previous purchases", y = "purchase amount in USD", color = "Age Group", title = "Figure 8. Effects of Age Group and Previous Purchases on Amount Purchased in USD") +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_minimal()
+```
+
+### 3.3.1. Model 3
+
+The components of my multiple linear regression model are the following:
+
+-   outcome variable y1 = review rating
+
+-   Numerical explanatory variable x1 = age
+
+-   Categorical explanatory variable x2 = discount applied
+
+We want to know if the relationship between age and review rating is conditional on whether or not their was a discount applied to their purchase.
+
+#### Table 7. Regression table for interaction model of review rating as a function of age group and whether or not there was a discount applied.
+
+```{r}
+#| echo: false
+#| message: false
+
+
+purchase4_amount_regression <- lm(review_rating ~ age * discount_applied, data = shopping_behavior)
+
+broom::tidy(purchase4_amount_regression, conf.int = TRUE)
+```
+
+### 3.3.2. Model 3 Results
+
+-   Since "no" comes first alphabetically, people who did not have a discount applied are the "baseline comparison group". Therefore, the intercept (b0 = 3.86) represents the intercept for only the group who did not receive a discount.
+
+```{=html}
+<!-- -->
+```
+-   The estimate for the slope for age (bage = -0.0024) is the associated change in review rating for every increase of one year in age. Every increase of one year, there is a 0.0024 decrease in review rating.
+
+-   The estimate for the group that did get a discount applied (Bdiscountappliedyes = -0.15) is the offset in intercept relative to the group who did not get a discount (baseline).
+
+### 3.3.3. Model 3 Interpretation
+
+The first null hypothesis is that there is no relationship between age and review rating at the population level (the population slope is zero).
+
+There appears to be a possible negative relationship between age and review rating for consumers Bage= -0.0024. There appears to be a meaningful relationship since in the table, we see
+
+-   the 95% confidence interval for the population slope Bage (-0.00434, -0.00040), zero is not included within this interval
+
+-   The p-value (p = 0.019) is greater than 0.05, but still less than 0.1, indicating weak evidence against the null hypothesis
+
+Therefore, the relationship does indeed appear to be negative.
+
+The second null hypothesis that we are testing is that the difference in intercept for the non-baseline group is zero.
+
+-   The 95% confidence interval for the group who received a discount is (-0.29, -0.014). This interval does not contain zero, therefore it is not plausible that the intercept is the same.
+
+-   The p-value is 0.031 which is greater than 0.05, but still less than 0.1 indicating weak evidence against the null hypothesis.
+
+Because the previous two null hypotheses could not be rejected, we must address the third null hypothesis that there is no relationship between the interaction of age and discount applied and review rating.
+
+-   The 95% confidence interval for the interaction is (0.000074, 0.0060). This interval does not contain zero, therefore it is not plausible to reject the null hypothesis.
+
+-   The p-value is 0.044 is less than 0.05 indicating that there is moderate evidence against the null hypothesis.
+
+```{r, fig.height= 10, fig.width= 10}
+#| echo: false
+#| message: false
+
+
+ggplot(shopping_behavior, aes(x = age, y = review_rating, color = age_group)) +
+  geom_jitter(alpha = .2) +
+  labs(x = "age", y = "review_rating", color = "Age Group & Discount Applied", title = "Figure 9. Effects of Age and Discount Application on Review Rating") +
+  geom_smooth(method = "lm", se = FALSE, aes(color = discount_applied)) 
+```
+
+## 4. Conclusions
+
+We found that (1) there was no significant difference in the amount purchased in USD based on age for people with different frequencies of purchases, (2) there was no significant difference in the amount purchased based on number of previous purchases for people in different age groups, (3) There is moderate evidence for a difference in review rating based on age for people who got a discount versus those who did not. For Model 3, we found that when there was no discount applied, as age increased, review rating decreased. When there was a discount applied, as age increased, review rating increased. For model 1, we found moderate evidence that as age increased, purchase amount increased for those who purchased biweekly and quarterly.
+
+```{r}
+s18_24 <- shopping_behavior %>%
+  filter(age_group == "18-24")
+```
+
+```{r}
+s25_29 <- shopping_behavior %>%
+  filter(age_group == "25-29")
+```
+
+```{r}
+s30_34 <- shopping_behavior %>%
+  filter(age_group == "30-34")
+```
+
+```{r}
+s35_39 <- shopping_behavior %>%
+  filter(age_group == "35-39")
+```
+
+```{r}
+s40_44 <- shopping_behavior %>%
+  filter(age_group == "40-44")
+```
+
+```{r}
+s45_49 <- shopping_behavior %>%
+  filter(age_group == "45-49")
+```
+
+```{r}
+s50_54 <- shopping_behavior %>%
+  filter(age_group == "50-54")
+```
+
+```{r}
+s55_59 <- shopping_behavior %>%
+  filter(age_group == "55-59")
+```
+
+```{r}
+s60_64 <- shopping_behavior %>%
+  filter(age_group == "60-64")
+```
+
+```{r}
+s65_70 <- shopping_behavior %>%
+  filter(age_group == "65-70")
+```
+
+```{r}
+baby_boomers <- shopping_behavior %>%
+  filter(generation == "Baby Boomers")
+```
+
+```{r}
+generation_x <- shopping_behavior %>%
+  filter(generation == "Generation X")
+```
+
+```{r}
+millenials <- shopping_behavior %>%
+  filter(generation == "Millenials")
+```
+
+```{r}
+generation_z <- shopping_behavior %>%
+  filter(generation == "Generation Z")
+```
+
+```{r, fig.height = 15, fig.width = 10}
+#| echo: false
+#| message: false
+
+
+ggplot(shopping_behavior, aes(x = age, y = purchase_amount_USD, color = payment_method)) +
+  geom_jitter(alpha = .2) +
+  labs(x = "age", y = "purchase amount in USD", color = "payment method") +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+```{r}
+#| echo: false
+#| message: false
+
+
+purchase3_amount_regression <- lm(purchase_amount_USD ~ age * payment_method, data = shopping_behavior)
+
+broom::tidy(purchase3_amount_regression)
+```
